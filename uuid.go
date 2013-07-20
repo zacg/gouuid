@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"hash"
 	"regexp"
+	"strings"
 )
 
 // The UUID reserved variants. 
@@ -46,7 +47,6 @@ type UUID [16]byte
 // ParseHex creates a UUID object from given hex string
 // representation. Function accepts UUID string in following
 // formats:
-//
 //     uuid.ParseHex("6ba7b814-9dad-11d1-80b4-00c04fd430c8")
 //     uuid.ParseHex("{6ba7b814-9dad-11d1-80b4-00c04fd430c8}")
 //     uuid.ParseHex("urn:uuid:6ba7b814-9dad-11d1-80b4-00c04fd430c8")
@@ -55,7 +55,7 @@ func ParseHex(s string) (u *UUID, err error) {
 	re := regexp.MustCompile(hexPattern)
 	md := re.FindStringSubmatch(s)
 	if md == nil {
-		err = errors.New("Invalid UUID string")
+		err = errors.New("Invalid UUID string: " + s)
 		return
 	}
 	hash := md[2] + md[3] + md[4] + md[5] + md[6]
@@ -169,4 +169,28 @@ func (u *UUID) Version() uint {
 // Returns unparsed version of the generated UUID sequence.
 func (u *UUID) String() string {
 	return fmt.Sprintf("%x-%x-%x-%x-%x", u[0:4], u[4:6], u[6:8], u[8:10], u[10:])
+}
+
+// Returns UUID string without dashes
+func (u *UUID) ShortString() string {
+	return fmt.Sprintf("%x", u)
+}
+
+//	Unmarshal from JSON
+func (u *UUID) UnmarshalJSON(b []byte) error {
+	
+	n := len(b)
+	str := string(b[:n])
+	str = strings.Replace(str,"\"","",-1)
+
+	x, e := ParseHex(str)
+	if e == nil {
+		copy((*u)[:], x[:])
+	}
+	return e
+}
+
+// Marshal to JSON
+func (u *UUID) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + u.String() + "\""), nil
 }
