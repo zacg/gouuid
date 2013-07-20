@@ -55,7 +55,7 @@ func ParseHex(s string) (u *UUID, err error) {
 	re := regexp.MustCompile(hexPattern)
 	md := re.FindStringSubmatch(s)
 	if md == nil {
-		err = errors.New("Invalid UUID string: " + s)
+		err = errors.New("Invalid UUID string")
 		return
 	}
 	hash := md[2] + md[3] + md[4] + md[5] + md[6]
